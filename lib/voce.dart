@@ -9,11 +9,22 @@ class Voce {
   final SpeechToText _stt = SpeechToText();
   bool _sttPronto = false;
 
+  /// Toglie asterischi e simboli di formattazione, che la voce leggerebbe ad alta voce.
+  static String _pulisci(String t) {
+    var s = t.replaceAll(RegExp(r'```[\s\S]*?```'), ' ');
+    s = s.replaceAllMapped(RegExp(r'!?\[([^\]]*)\]\([^)]*\)'), (m) => m[1] ?? '');
+    s = s.replaceAll(RegExp(r'^\s{0,3}#{1,6}\s*', multiLine: true), '');
+    s = s.replaceAll(RegExp(r'^\s*(?:[-*•+]|\d+[.)])\s+', multiLine: true), '');
+    s = s.replaceAll(RegExp(r'[*`~#>|]+|(?<!\w)_+|_+(?!\w)'), '');
+    s = s.replaceAll(RegExp(r'[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]', unicode: true), '');
+    return s.replaceAll(RegExp(r'[ \t]+'), ' ').trim();
+  }
+
   Future<void> parla(String testo) async {
     try {
       await _tts.setLanguage('it-IT');
       await _tts.awaitSpeakCompletion(true);
-      await _tts.speak(testo);
+      await _tts.speak(_pulisci(testo));
     } catch (_) {
       // la voce è un di più: se non funziona non deve bloccare nulla
     }
