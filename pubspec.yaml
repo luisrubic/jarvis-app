@@ -1,0 +1,23 @@
+name: jarvis_app
+description: Jarvis, assistente personale con SOS, Lens e spese di famiglia.
+publish_to: none
+version: 0.2.0+1
+
+environment:
+  sdk: ">=3.3.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  http: ^1.2.0
+  shared_preferences: ^2.2.0
+  image_picker: ^1.0.7
+  url_launcher: ^6.2.0
+  share_plus: ^9.0.0
+  geolocator: ^12.0.0
+  permission_handler: ^11.3.0
+  speech_to_text: ^7.0.0
+  flutter_tts: ^4.0.0
+
+flutter:
+  uses-material-design: true

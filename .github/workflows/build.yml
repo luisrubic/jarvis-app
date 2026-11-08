@@ -1,0 +1,45 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      # La cartella android/ non è nel repository: la crea Flutter ogni volta,
+      # poi lo script aggiunge SMS, chiamata, microfono e permessi.
+      - name: Prepara la parte Android
+        run: |
+          flutter create --org com.jarvis --project-name jarvis_app --platforms=android /tmp/scaffold
+          cp -r /tmp/scaffold/android android
+          python3 tools/prepara_android.py android
+
+      - name: Scarica le dipendenze
+        run: flutter pub get
+
+      # Mostra gli errori di codice in modo leggibile, prima della build lunga.
+      - name: Controlla il codice
+        run: flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Compila l'APK
+        run: flutter build apk --release
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jarvis-apk
+          path: build/app/outputs/flutter-apk/app-release.apk

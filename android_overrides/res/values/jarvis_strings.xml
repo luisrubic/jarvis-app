@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jarvis_a11y_descrizione">Permette a Jarvis di premere i tasti di sistema, toccare, scrivere, scorrere e leggere lo schermo quando glielo chiedi. Le azioni delicate chiedono sempre la tua conferma.</string>
+</resources>
