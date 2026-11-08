@@ -20,6 +20,17 @@ class Telefono {
   Timer? _poll;
   bool _inCorso = false;
 
+  /// "casa" e "lavoro" diventano gli indirizzi salvati nelle Impostazioni; il resto resta com'è.
+  /// Ritorna null se chiedi casa/lavoro ma l'indirizzo non è stato impostato.
+  String? _risolviDestinazione(String richiesta) {
+    final r = richiesta.toLowerCase().replaceAll(RegExp(r'[^a-zàèéìòù ]'), ' ').trim();
+    const casa = {'casa', 'a casa', 'casa mia', 'a casa mia', 'home', 'il mio indirizzo di casa'};
+    const lavoro = {'lavoro', 'al lavoro', 'ufficio', "in ufficio", 'work', 'il mio lavoro'};
+    if (casa.contains(r)) return imp.indirizzoCasa.trim().isEmpty ? null : imp.indirizzoCasa.trim();
+    if (lavoro.contains(r)) return imp.indirizzoLavoro.trim().isEmpty ? null : imp.indirizzoLavoro.trim();
+    return richiesta;
+  }
+
   Future<bool> controlloAttivo() async {
     try {
       return await _n.invokeMethod<bool>('a11yAttivo') ?? false;
@@ -70,7 +81,11 @@ class Telefono {
           await _n.invokeMethod('whatsapp', {'numero': args['numero'], 'testo': args['testo']});
           return 'WhatsApp pronto: premi tu invio';
         case 'naviga':
-          await _n.invokeMethod('navigate', {'dest': args['destinazione']});
+          final dest = _risolviDestinazione('${args['destinazione']}');
+          if (dest == null) {
+            return 'Indirizzo di casa/lavoro non impostato: scrivilo in Impostazioni > I miei indirizzi';
+          }
+          await _n.invokeMethod('navigate', {'dest': dest});
           return 'Navigazione aperta';
         case 'torcia':
           await _n.invokeMethod('torch', {'on': args['acceso']});

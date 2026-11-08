@@ -30,6 +30,8 @@ class Impostazioni extends ChangeNotifier {
   double sogliaG = 2.5;
   bool muto = false;
   bool riceviDalPc = false; // il telefono ritira i comandi chiesti a Jarvis dal PC
+  String indirizzoCasa = ''; // dove ti porta Jarvis quando dici "portami a casa"
+  String indirizzoLavoro = '';
   List<Fidato> fidati = [];
 
   Future<void> carica() async {
@@ -43,6 +45,8 @@ class Impostazioni extends ChangeNotifier {
     sogliaG = _p.getDouble('sogliaG') ?? sogliaG;
     muto = _p.getBool('muto') ?? false;
     riceviDalPc = _p.getBool('riceviDalPc') ?? false;
+    indirizzoCasa = _p.getString('indirizzoCasa') ?? '';
+    indirizzoLavoro = _p.getString('indirizzoLavoro') ?? '';
     final grezzo = _p.getString('fidati');
     if (grezzo != null) {
       try {
@@ -65,6 +69,8 @@ class Impostazioni extends ChangeNotifier {
     await _p.setDouble('sogliaG', sogliaG);
     await _p.setBool('muto', muto);
     await _p.setBool('riceviDalPc', riceviDalPc);
+    await _p.setString('indirizzoCasa', indirizzoCasa);
+    await _p.setString('indirizzoLavoro', indirizzoLavoro);
     await _p.setString('fidati', jsonEncode(fidati.map((f) => f.toJson()).toList()));
     notifyListeners();
   }

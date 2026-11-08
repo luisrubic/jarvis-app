@@ -20,6 +20,8 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
   late final TextEditingController _url = TextEditingController(text: widget.imp.serverUrl);
   late final TextEditingController _urlFuori = TextEditingController(text: widget.imp.serverUrlFuori);
   late final TextEditingController _token = TextEditingController(text: widget.imp.token);
+  late final TextEditingController _casa = TextEditingController(text: widget.imp.indirizzoCasa);
+  late final TextEditingController _lavoro = TextEditingController(text: widget.imp.indirizzoLavoro);
   final TextEditingController _nome = TextEditingController();
   final TextEditingController _numero = TextEditingController();
 
@@ -27,6 +29,8 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
   void dispose() {
     _url.dispose();
     _urlFuori.dispose();
+    _casa.dispose();
+    _lavoro.dispose();
     _token.dispose();
     _nome.dispose();
     _numero.dispose();
@@ -129,6 +133,36 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
             },
             icon: const Icon(Icons.wifi_find),
             label: const Text('Prova connessione'),
+          ),
+          const Divider(height: 40),
+          const Text('I miei indirizzi', style: TextStyle(fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: _casa,
+            keyboardType: TextInputType.streetAddress,
+            decoration: const InputDecoration(
+              labelText: 'Indirizzo di casa',
+              helperText: 'Per "Jarvis, portami a casa". Esempio: Via Roma 10, Milano',
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (v) {
+              imp.indirizzoCasa = v;
+              imp.salva();
+            },
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _lavoro,
+            keyboardType: TextInputType.streetAddress,
+            decoration: const InputDecoration(
+              labelText: 'Indirizzo di lavoro (facoltativo)',
+              helperText: 'Per "portami al lavoro"',
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (v) {
+              imp.indirizzoLavoro = v;
+              imp.salva();
+            },
           ),
           const Divider(height: 40),
           const Text('SOS', style: TextStyle(fontWeight: FontWeight.bold)),
