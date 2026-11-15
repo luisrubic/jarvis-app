@@ -165,6 +165,34 @@ class _ImpostazioniScreenState extends State<ImpostazioniScreen> {
             },
           ),
           const Divider(height: 40),
+          const Text('Voce', style: TextStyle(fontWeight: FontWeight.bold)),
+          SwitchListTile(
+            title: const Text('Risposta automatica'),
+            subtitle: const Text('Dopo la risposta Jarvis si rimette in ascolto da solo, senza premere il microfono. Si ferma se non dici nulla o premi Ferma.'),
+            value: imp.conversazione,
+            onChanged: (v) {
+              imp.conversazione = v;
+              imp.salva();
+            },
+          ),
+          ListTile(
+            title: Text('Pausa di silenzio: ${imp.pausaVoce} secondi'),
+            subtitle: Slider(
+              min: 2,
+              max: 10,
+              divisions: 8,
+              value: imp.pausaVoce.toDouble(),
+              onChanged: (v) {
+                imp.pausaVoce = v.round();
+                imp.salva();
+              },
+            ),
+          ),
+          const Text(
+            'Quanto aspetta, dopo l\'ultima parola, prima di inviare il comando. Più alto = più tempo per pensare. Android può comunque chiudere l\'ascolto prima.',
+            style: TextStyle(fontSize: 12),
+          ),
+          const Divider(height: 40),
           const Text('SOS', style: TextStyle(fontWeight: FontWeight.bold)),
           SwitchListTile(
             title: const Text('Modalità prova'),

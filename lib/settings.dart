@@ -30,6 +30,8 @@ class Impostazioni extends ChangeNotifier {
   double sogliaG = 2.5;
   bool muto = false;
   bool riceviDalPc = false; // il telefono ritira i comandi chiesti a Jarvis dal PC
+  bool conversazione = true; // dopo la risposta Jarvis si rimette in ascolto da solo
+  int pausaVoce = 4; // secondi di silenzio prima di considerare finito il comando
   String indirizzoCasa = ''; // dove ti porta Jarvis quando dici "portami a casa"
   String indirizzoLavoro = '';
   List<Fidato> fidati = [];
@@ -45,6 +47,8 @@ class Impostazioni extends ChangeNotifier {
     sogliaG = _p.getDouble('sogliaG') ?? sogliaG;
     muto = _p.getBool('muto') ?? false;
     riceviDalPc = _p.getBool('riceviDalPc') ?? false;
+    conversazione = _p.getBool('conversazione') ?? true;
+    pausaVoce = _p.getInt('pausaVoce') ?? 4;
     indirizzoCasa = _p.getString('indirizzoCasa') ?? '';
     indirizzoLavoro = _p.getString('indirizzoLavoro') ?? '';
     final grezzo = _p.getString('fidati');
@@ -69,6 +73,8 @@ class Impostazioni extends ChangeNotifier {
     await _p.setDouble('sogliaG', sogliaG);
     await _p.setBool('muto', muto);
     await _p.setBool('riceviDalPc', riceviDalPc);
+    await _p.setBool('conversazione', conversazione);
+    await _p.setInt('pausaVoce', pausaVoce);
     await _p.setString('indirizzoCasa', indirizzoCasa);
     await _p.setString('indirizzoLavoro', indirizzoLavoro);
     await _p.setString('fidati', jsonEncode(fidati.map((f) => f.toJson()).toList()));

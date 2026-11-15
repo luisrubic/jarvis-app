@@ -29,9 +29,13 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scroll = ScrollController();
   bool _occupato = false;
   bool _ascolto = false;
+  int _sessione = 0; // si incrementa per interrompere la conversazione vocale in corso
 
   @override
   void dispose() {
+    _sessione++;
+    widget.voce.ferma();
+    widget.voce.annullaAscolto();
     _campo.dispose();
     _scroll.dispose();
     super.dispose();
@@ -46,21 +50,29 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  Future<void> _invia(String testo) async {
+  /// [vocale] = il comando è arrivato a voce: dopo la risposta, se è attiva la risposta automatica,
+  /// Jarvis si rimette in ascolto. Un nuovo comando interrompe subito la lettura in corso.
+  Future<void> _invia(String testo, {bool vocale = false}) async {
     testo = testo.trim();
     if (testo.isEmpty || _occupato) return;
+    await widget.voce.ferma(); // nuovo comando: smetti di leggere la risposta precedente
+    final sessione = ++_sessione;
     _campo.clear();
     setState(() {
       _messaggi.add(_Messaggio(testo, true));
       _occupato = true;
     });
     _inFondo();
+    var continua = false;
     try {
       final r = await widget.api.chat(testo);
       if (!mounted) return;
       setState(() => _messaggi.add(_Messaggio(r.testo, false)));
-      if (!widget.imp.muto) await widget.voce.parla(r.testo);
+      if (mounted) setState(() => _occupato = false); // da qui si può già dare un nuovo comando
+      final lettura = widget.imp.muto ? Future<void>.value() : widget.voce.parla(r.testo);
       await _azioni(r);
+      await lettura;
+      continua = vocale && widget.imp.conversazione && sessione == _sessione;
     } on ApiErrore catch (e) {
       if (!mounted) return;
       setState(() => _messaggi.add(_Messaggio('⚠ ${e.messaggio}', false)));
@@ -68,6 +80,7 @@ class _ChatScreenState extends State<ChatScreen> {
       if (mounted) setState(() => _occupato = false);
       _inFondo();
     }
+    if (continua && mounted) await _parla(automatico: true);
   }
 
   /// Esegue le azioni decise da Jarvis: prima quelle sul telefono, poi le conferme per il PC.
@@ -89,13 +102,32 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> _parla() async {
-    if (_ascolto) return;
+  /// Microfono: se Jarvis sta leggendo, lo interrompe e ti ascolta; se ti sta ascoltando, chiude
+  /// l'ascolto e invia quello che ha capito.
+  Future<void> _parla({bool automatico = false}) async {
+    if (_ascolto) {
+      await widget.voce.fermaAscolto();
+      return;
+    }
+    final sessione = ++_sessione;
+    await widget.voce.ferma();
     setState(() => _ascolto = true);
-    final testo = await widget.voce.ascolta();
+    final testo = await widget.voce.ascolta(pausa: widget.imp.pausaVoce);
     if (!mounted) return;
     setState(() => _ascolto = false);
-    if (testo.isNotEmpty) await _invia(testo);
+    if (sessione != _sessione) return; // interrotto da "Ferma" o da un altro comando
+    if (testo.isNotEmpty) {
+      await _invia(testo, vocale: true);
+    }
+    // nessuna frase capita: la conversazione automatica finisce qui
+  }
+
+  /// Ferma tutto: lettura, ascolto e conversazione automatica.
+  Future<void> _ferma() async {
+    _sessione++;
+    await widget.voce.annullaAscolto();
+    await widget.voce.ferma();
+    if (mounted) setState(() => _ascolto = false);
   }
 
   @override
@@ -157,7 +189,19 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               ),
               const SizedBox(width: 8),
+              ValueListenableBuilder<bool>(
+                valueListenable: widget.voce.parlando,
+                builder: (_, parlando, __) => (parlando || _ascolto)
+                    ? IconButton.filled(
+                        tooltip: 'Ferma',
+                        style: IconButton.styleFrom(backgroundColor: colori.error, foregroundColor: colori.onError),
+                        onPressed: _ferma,
+                        icon: const Icon(Icons.stop),
+                      )
+                    : const SizedBox.shrink(),
+              ),
               IconButton.filledTonal(
+                tooltip: _ascolto ? 'Invia quello che hai detto' : 'Parla',
                 onPressed: _parla,
                 icon: Icon(_ascolto ? Icons.hearing : Icons.mic),
               ),
