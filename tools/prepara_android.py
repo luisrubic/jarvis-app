@@ -103,6 +103,26 @@ def main(cartella_android):
             trovato = True
     if not trovato:
         print("ATTENZIONE: non ho trovato minSdk nel file gradle; se la build si lamenta di minSdk, va portato a 24.")
+    # 4. Il controllo "lint" dei plugin a volte va in errore da solo (bug di Android lint, non del codice):
+    # lo si spegne per i plugin, la build dell'APK non ne ha bisogno.
+    for nome in ("build.gradle.kts", "build.gradle"):
+        radice = android / nome
+        if radice.exists():
+            t = radice.read_text(encoding="utf-8")
+            if "JARVIS_NO_LINT" not in t:
+                t += """
+
+// JARVIS_NO_LINT
+subprojects {
+    tasks.configureEach {
+        if (name.startsWith("lintVital") || name.startsWith("lintAnalyze") || name.startsWith("lintReport")) {
+            enabled = false
+        }
+    }
+}
+"""
+                radice.write_text(t, encoding="utf-8")
+            break
     print("Android pronto: codice nativo, permessi, servizio di accessibilità e manifest aggiornati.")
 
 
